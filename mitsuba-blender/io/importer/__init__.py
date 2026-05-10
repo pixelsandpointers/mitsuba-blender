@@ -42,9 +42,10 @@ def _check_unqueried_props(mi_context, mi_cls, mi_props):
         mi_context.log(f'Mitsuba {mi_cls} property "{prop_name}" was not handled.', 'WARN')
 
 def _convert_named_references(mi_context, mi_props, parent_node, type_filter=[]):
-    for _, ref_id in mi_props.named_references():
+    for _, ref_id in mi_props_utils.get_references(mi_props):
         mi_child_cls, mi_child_props = mi_context.mi_scene_props.get_with_id(ref_id)
-        assert mi_child_cls is not None and mi_child_props is not None
+        if mi_child_cls is None:
+            continue
         if len(type_filter) == 0 or mi_child_cls in type_filter:
             child_node = mi_props_to_bl_data_node(mi_context, mi_child_cls, mi_child_props)
             if child_node is not None:
@@ -363,6 +364,41 @@ def instantiate_bl_data_node(mi_context, bl_node):
 ##    Main loading     ##
 #########################
 
+def _xml_to_props(filepath):
+    """Parse a Mitsuba XML file and return a list of (class_name, Properties) tuples.
+
+    Wraps mitsuba's xml_to_props (removed in 3.8) using the new parser module.
+    """
+    import mitsuba as mi
+    try:
+        return mi.xml_to_props(filepath)
+    except AttributeError:
+        pass
+    # mitsuba 3.8+: use the parser module
+    config = mi.parser.ParserConfig(mi.variant())
+    state = mi.parser.parse_file(config, filepath)
+    _TYPE_TO_CLASS = {
+        mi.ObjectType.Scene: 'Scene',
+        mi.ObjectType.BSDF: 'BSDF',
+        mi.ObjectType.Emitter: 'Emitter',
+        mi.ObjectType.Film: 'Film',
+        mi.ObjectType.Integrator: 'Integrator',
+        mi.ObjectType.Medium: 'Medium',
+        mi.ObjectType.PhaseFunction: 'PhaseFunction',
+        mi.ObjectType.ReconstructionFilter: 'ReconstructionFilter',
+        mi.ObjectType.Sampler: 'Sampler',
+        mi.ObjectType.Sensor: 'Sensor',
+        mi.ObjectType.Shape: 'Shape',
+        mi.ObjectType.Texture: 'Texture',
+        mi.ObjectType.Volume: 'Volume',
+    }
+    result = []
+    for node in state.nodes:
+        cls = _TYPE_TO_CLASS.get(node.type)
+        if cls is not None:
+            result.append((cls, node.props))
+    return result
+
 def load_mitsuba_scene(bl_context, bl_scene, bl_collection, filepath, global_mat):
     ''' Load a Mitsuba scene from an XML file into a Blender scene.
     
@@ -376,8 +412,7 @@ def load_mitsuba_scene(bl_context, bl_scene, bl_collection, filepath, global_mat
     '''
     start_time = time.time()
     # Load the Mitsuba XML and extract the objects' properties
-    from mitsuba import xml_to_props
-    raw_props = xml_to_props(filepath)
+    raw_props = _xml_to_props(filepath)
     mi_scene_props = common.MitsubaSceneProperties(raw_props)
     mi_context = common.MitsubaSceneImportContext(bl_context, bl_scene, bl_collection, filepath, mi_scene_props, global_mat)
 

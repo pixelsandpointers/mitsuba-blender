@@ -168,8 +168,16 @@ class MitsubaSceneProperties:
     """ Container for loaded Mitsuba scene properties """
     def __init__(self, props):
         self.objects = OrderedDict()
+        _auto_id = 0
         for (class_, prop) in props:
-            self.objects[prop.id()] = (class_, prop)
+            key = prop.id()
+            # Unnamed objects (empty ID) or duplicate IDs get a generated key so
+            # they don't overwrite each other.  Named lookups via get_with_id still
+            # work because only objects with real IDs are referenced by name.
+            if not key or key in self.objects:
+                key = f'__auto_{_auto_id}'
+                _auto_id += 1
+            self.objects[key] = (class_, prop)
 
     def __len__(self):
         return len(self.objects)

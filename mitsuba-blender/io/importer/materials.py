@@ -174,10 +174,13 @@ def write_mi_float_property(mi_context, mi_mat, mi_prop_name, bl_mat_wrap, out_s
         if mi_prop_type == Properties.Type.Float:
             mi_prop_value = mi_mat.get(mi_prop_name, default)
             write_mi_float_value(mi_context, mi_prop_value, bl_mat_wrap, out_socket_id, transformation)
-        elif mi_prop_type == Properties.Type.NamedReference:
-            mi_texture_ref_id = mi_mat.get(mi_prop_name)
+        elif mi_prop_type in (getattr(Properties.Type, 'Reference', None), getattr(Properties.Type, 'NamedReference', None)):
+            ref_val = mi_mat.get(mi_prop_name)
+            mi_texture_ref_id = ref_val.id() if isinstance(ref_val, Properties.Reference) else ref_val
             mi_texture = mi_context.mi_scene_props.get_with_id_and_class(mi_texture_ref_id, 'Texture')
-            assert mi_texture is not None
+            if mi_texture is None:
+                mi_context.log(f'Cannot resolve texture reference "{mi_texture_ref_id}".', 'WARN')
+                return
             write_mi_float_texture(mi_context, mi_texture, bl_mat_wrap, out_socket_id, default)
         elif mi_prop_type == Properties.Type.Object:
             mi_obj = mi_mat.get(mi_prop_name)
@@ -247,17 +250,20 @@ def write_mi_rgb_property(mi_context, mi_mat, mi_prop_name, bl_mat_wrap, out_soc
         mi_prop_type = mi_mat.type(mi_prop_name)
         if mi_prop_type == Properties.Type.Color:
             write_mi_rgb_value(mi_context, list(mi_mat.get(mi_prop_name, default)), bl_mat_wrap, out_socket_id)
-        if mi_prop_type == Properties.Type.Float:
+        elif mi_prop_type == Properties.Type.Float:
             if mi_prop_name in mi_mat:
                 col_val = mi_mat.get(mi_prop_name)
                 col = [col_val, col_val, col_val]
             else:
                 col = default
             write_mi_rgb_value(mi_context, list(col), bl_mat_wrap, out_socket_id)
-        elif mi_prop_type == Properties.Type.NamedReference:
-            mi_texture_ref_id = mi_mat.get(mi_prop_name)
+        elif mi_prop_type in (getattr(Properties.Type, 'Reference', None), getattr(Properties.Type, 'NamedReference', None)):
+            ref_val = mi_mat.get(mi_prop_name)
+            mi_texture_ref_id = ref_val.id() if isinstance(ref_val, Properties.Reference) else ref_val
             mi_texture = mi_context.mi_scene_props.get_with_id_and_class(mi_texture_ref_id, 'Texture')
-            assert mi_texture is not None
+            if mi_texture is None:
+                mi_context.log(f'Cannot resolve texture reference "{mi_texture_ref_id}".', 'WARN')
+                return
             write_mi_rgb_texture(mi_context, mi_texture, bl_mat_wrap, out_socket_id, default)
         elif mi_prop_type == Properties.Type.Object:
             mi_obj = mi_mat.get(mi_prop_name)

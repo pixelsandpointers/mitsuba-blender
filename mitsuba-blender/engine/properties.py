@@ -267,14 +267,25 @@ class MitsubaRenderSettings(PropertyGroup):
     It creates classes for each plugin described in the JSON files dynamically.
     '''
 
-    from mitsuba import variant, variants, config
+    from mitsuba import variants
+    try:
+        import drjit as dr
+        _cuda_available = dr.has_backend(dr.JitBackend.CUDA)
+    except Exception:
+        _cuda_available = False
+
     enum_variants = []
     for var in variants():
+        # LLVM variants crash inside Blender: drjit's LLVM JIT conflicts with
+        # Blender's embedded LLVM (used by Cycles/OSL).
+        if var.startswith('llvm_'):
+            continue
+        # Only show CUDA variants when a CUDA device is present.
+        if var.startswith('cuda_') and not _cuda_available:
+            continue
         enum_variants.append((var, var, ""))
 
-    if config.MI_DEFAULT_VARIANT:
-        default_variant = config.MI_DEFAULT_VARIANT
-    default_variant = variant()
+    default_variant = 'scalar_rgb' if 'scalar_rgb' in variants() else enum_variants[0][0]
 
     variant : EnumProperty(
         name = "Variant",
