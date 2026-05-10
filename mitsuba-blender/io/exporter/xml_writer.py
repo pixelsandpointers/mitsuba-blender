@@ -675,7 +675,7 @@ class WriteXML:
             The given transform matrix
         '''
 
-        value = " ".join(["%f" % x for x in transform.matrix.numpy().flatten()])
+        value = " ".join(["%f" % x for x in dr.numpy(transform.matrix).flatten()])
 
         params = {
             'matrix': {
@@ -699,33 +699,33 @@ class WriteXML:
         scale, quat, trans = dr.transform_decompose(transform.matrix)
         rot = dr.quat_to_euler(quat)
         params = {}
-        if rot[0] != 0.0:
+        if float(rot[0]) != 0.0:
             params['rotate_x'] = {
                 'type': 'rotate',
                 'x': '1',
-                'angle': rot[0] * 180 / dr.pi
+                'angle': float(rot[0]) * 180 / dr.pi
             }
-        if rot[1] != 0.0:
+        if float(rot[1]) != 0.0:
             params['rotate_y'] = {
                 'type': 'rotate',
                 'y': '1',
-                'angle': rot[1] * 180 / dr.pi
+                'angle': float(rot[1]) * 180 / dr.pi
             }
-        if rot[2] != 0.0:
+        if float(rot[2]) != 0.0:
             params['rotate_z'] = {
                 'type': 'rotate',
                 'z': '1',
-                'angle': rot[2] * 180 / dr.pi
+                'angle': float(rot[2]) * 180 / dr.pi
             }
-        if export_scale and scale != 1.0:
+        if export_scale and bool(dr.any(scale != 1.0)):
             params['scale'] = {
                 'type': 'scale',
                 'value': "%f %f %f" % (scale[0,0], scale[1,1], scale[2,2])
             }
-        if trans != 0.0:
+        if bool(dr.any(trans != 0.0)):
             params['translate'] = {
                 'type': 'translate',
-                'value': "%f %f %f" % (trans[0], trans[1], trans[2])
+                'value': "%f %f %f" % (float(trans[0]), float(trans[1]), float(trans[2]))
             }
 
         return params
