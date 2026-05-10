@@ -1,34 +1,33 @@
-# This workflow runs on every commit on the master branch. It runs the test suite
-# and packages the add-on. It then updates the "nightly release" in the release section
-# of the repository.
 name: Nightly Release
 
-# Triggers the workflow on pushes on the master branch
 on:
   push:
     branches: [master]
 
-# Workflow steps
 jobs:
   tests:
     uses: ./.github/workflows/test.yml
 
   package:
-    name: "Package Release"
+    name: "Package ${{ matrix.platform }}"
     needs: [tests]
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux-x86_64, macos-arm64, macos-x86_64, windows-x86_64]
 
     steps:
     - name: Git checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
 
-    - name: Create package
-      run: python release/package.py
+    - name: Create extension package
+      run: python release/package.py --platform ${{ matrix.platform }}
 
     - name: Advance `latest` tag
+      if: matrix.platform == 'linux-x86_64'
       uses: actions/github-script@v6
       with:
         script: |
@@ -55,7 +54,7 @@ jobs:
         prerelease: true
         allowUpdates: true
         replacesArtifacts: true
-        artifacts: "mitsuba-blender.zip"
+        artifacts: "mitsuba-blender-${{ matrix.platform }}.zip"
         artifactErrorsFailBuild: true
         tag: "latest"
         bodyFile: "release/nightly_release_body.md"

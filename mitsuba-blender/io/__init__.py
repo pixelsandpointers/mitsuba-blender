@@ -104,28 +104,23 @@ class ExportMitsuba(bpy.types.Operator, ExportHelper):
             default = True
     )
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.reset()
-
-    def reset(self):
-        self.converter = exporter.SceneConverter()
-
     def execute(self, context):
+        converter = exporter.SceneConverter()
+
         # Conversion matrix to shift the "Up" Vector. This can be useful when exporting single objects to an existing mitsuba scene.
         axis_mat = axis_conversion(
-	            to_forward=self.axis_forward,
-	            to_up=self.axis_up,
-	        ).to_4x4()
+            to_forward=self.axis_forward,
+            to_up=self.axis_up,
+        ).to_4x4()
 
-        self.converter.export_ctx.axis_mat = axis_mat
+        converter.export_ctx.axis_mat = axis_mat
         # Add IDs to all base plugins (shape, emitter, sensor...)
-        self.converter.export_ctx.export_ids = self.export_ids
+        converter.export_ctx.export_ids = self.export_ids
 
-        self.converter.use_selection = self.use_selection
+        converter.use_selection = self.use_selection
 
         # Set path to scene .xml file
-        self.converter.set_path(self.filepath, split_files=self.split_files)
+        converter.set_path(self.filepath, split_files=self.split_files)
 
         window_manager = context.window_manager
 
@@ -134,16 +129,13 @@ class ExportMitsuba(bpy.types.Operator, ExportHelper):
         total_progress = len(deps_graph.object_instances)
         window_manager.progress_begin(0, total_progress)
 
-        self.converter.scene_to_dict(deps_graph, window_manager)
+        converter.scene_to_dict(deps_graph, window_manager)
         #write data to scene .xml file
-        self.converter.dict_to_xml()
+        converter.dict_to_xml()
 
         window_manager.progress_end()
 
         self.report({'INFO'}, "Scene exported successfully!")
-
-        #reset the exporter
-        self.reset()
 
         return {'FINISHED'}
 

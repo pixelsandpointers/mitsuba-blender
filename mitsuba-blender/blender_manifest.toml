@@ -1,0 +1,23 @@
+schema_version = "1.0.0"
+
+id = "mitsuba_blender"
+version = "0.1.0"
+name = "Mitsuba-Blender"
+tagline = "Export scenes to Mitsuba's XML format"
+maintainer = "Benjamin Beilharz (pixelsandpointers)"
+type = "add-on"
+
+blender_version_min = "5.0.0"
+license = ["SPDX:GPL-3.0-or-later", "SPDX:BSD-3-Clause"]
+copyright = [
+    "2022 Baptiste Nicolet",
+    "2022 Dorian Ros",
+    "2022 Rami Tabbara",
+    "2017 Wenzel Jakob (Mitsuba renderer, bundled as a dependency)",
+]
+category = "Render"
+tags = ["Render", "Import-Export"]
+website = "https://github.com/mitsuba-renderer/mitsuba-blender"
+
+# Wheel paths are injected by release/package.py at build time.
+# To build locally: python release/package.py --platform <platform>
