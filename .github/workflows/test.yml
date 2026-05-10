@@ -19,12 +19,12 @@ jobs:
         environment:
         - {
           os: "ubuntu-latest",
-          mitsuba-version: "3.5.0",
+          mitsuba-version: "3.8.0",
           pip-platform: "manylinux_2_28_x86_64"
         }
         - {
           os: "windows-latest",
-          mitsuba-version: "3.5.0",
+          mitsuba-version: "3.8.0",
           pip-platform: "win_amd64"
         }
         blender:

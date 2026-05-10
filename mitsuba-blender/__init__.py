@@ -8,7 +8,7 @@ import sys
 
 from . import io, engine
 
-MITSUBA_VERSION = '3.5.0'
+MITSUBA_VERSION = '3.8.0'
 
 def get_addon_preferences(context):
     return context.preferences.addons[__package__].preferences

@@ -4,7 +4,7 @@ Build a platform-specific Mitsuba-Blender extension zip.
 Usage:
     python release/package.py --platform <platform>
 
-Platforms: linux-x86_64, macos-arm64, macos-x86_64, windows-x86_64
+Platforms: linux-x86_64, macos-arm64, windows-x86_64
 
 The script downloads the mitsuba wheel for the target platform, injects
 the wheels list into blender_manifest.toml, and produces a zip file
@@ -16,15 +16,14 @@ import os
 import subprocess
 from zipfile import ZipFile
 
-MITSUBA_VERSION = '3.5.0'
-# Blender 5.0 ships Python 3.11; fall back to 3.12 if no cp311 wheel exists.
-PYTHON_VERSIONS = ['311', '312']
+MITSUBA_VERSION = '3.8.0'
+# Blender 5.0 ships Python 3.13.
+PYTHON_VERSIONS = ['313', '312']
 
 # pip platform tags to try, in order, for each target platform
 PLATFORM_PIP_TAGS = {
-    'linux-x86_64':   ['manylinux2014_x86_64', 'manylinux_2_17_x86_64', 'linux_x86_64'],
+    'linux-x86_64':   ['manylinux_2_28_x86_64', 'manylinux2014_x86_64'],
     'macos-arm64':    ['macosx_11_0_arm64', 'macosx_14_0_arm64'],
-    'macos-x86_64':   ['macosx_10_14_x86_64', 'macosx_13_0_x86_64'],
     'windows-x86_64': ['win_amd64'],
 }
 
