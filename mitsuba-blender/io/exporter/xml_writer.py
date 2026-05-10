@@ -308,21 +308,31 @@ class WriteXML:
 
         self.wf(self.current_file, '/>\n')
 
+    _OBJECT_TYPE_TO_TAG = {
+        mi.ObjectType.BSDF:                'bsdf',
+        mi.ObjectType.Emitter:             'emitter',
+        mi.ObjectType.Film:                'film',
+        mi.ObjectType.Integrator:          'integrator',
+        mi.ObjectType.Medium:              'medium',
+        mi.ObjectType.PhaseFunction:       'phase',
+        mi.ObjectType.ReconstructionFilter:'rfilter',
+        mi.ObjectType.Sampler:             'sampler',
+        mi.ObjectType.Sensor:              'sensor',
+        mi.ObjectType.Shape:               'shape',
+        mi.ObjectType.Texture:             'texture',
+        mi.ObjectType.Volume:              'volume',
+    }
+
     def get_plugin_tag(self, plugin_type):
         '''
-        Get the corresponding tag of a given plugin (e.g. 'bsdf' for 'diffuse')
-        If the given type (e.g. 'transform') is not a plugin, returns None.
-
-        Parameter ``plugin_type``:
-            Name of the type (e.g. 'diffuse', 'ply'...)
+        Get the corresponding XML tag for a given plugin type name.
+        Returns None if the type is not a registered plugin.
         '''
-        class_ =  self.pmgr.get_plugin_class(plugin_type, mi.variant())
-        if not class_: # If get_plugin_class returns None, there is not corresponding plugin
+        try:
+            obj_type = self.pmgr.plugin_type(plugin_type)
+        except Exception:
             return None
-        class_ = class_.parent()
-        while class_.alias() == class_.name():
-            class_ = class_.parent()
-        return class_.alias()
+        return self._OBJECT_TYPE_TO_TAG.get(obj_type)
 
     def current_tag(self):
         '''
