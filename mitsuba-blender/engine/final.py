@@ -27,24 +27,25 @@ class MitsubaRenderEngine(bpy.types.RenderEngine):
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
     def render(self, depsgraph):
-        from mitsuba import set_variant, Thread
+        import mitsuba as mi
         b_scene = depsgraph.scene
-        set_variant(b_scene.mitsuba.variant)
+        mi.set_variant(b_scene.mitsuba.variant)
 
         scale = b_scene.render.resolution_percentage / 100.0
         self.size_x = int(b_scene.render.resolution_x * scale)
         self.size_y = int(b_scene.render.resolution_y * scale)
 
-        # Temporary workaround as long as the dict creation writes stuff to dict
         with tempfile.TemporaryDirectory() as dummy_dir:
             filepath = os.path.join(dummy_dir, "scene.xml")
             self.converter.set_path(filepath)
             self.converter.scene_to_dict(depsgraph)
-            Thread.thread().file_resolver().prepend(dummy_dir)
+            mi.Thread.thread().file_resolver().prepend(dummy_dir)
             mts_scene = self.converter.dict_to_scene()
 
+        # mi.render() handles thread setup correctly in mitsuba 3.6+
+        mi.render(mts_scene, sensor=0)
+
         sensor = mts_scene.sensors()[0]
-        mts_scene.integrator().render(mts_scene, sensor)
         render_results = sensor.film().bitmap().split()
 
         for result in render_results:
@@ -57,7 +58,6 @@ class MitsubaRenderEngine(bpy.types.RenderEngine):
         for result in render_results:
             render_pixels = np.array(result[1])
             if result[1].channel_count() == 2:
-                # Add a dummy third channel
                 render_pixels = np.dstack((render_pixels, np.zeros((*render_pixels.shape[:2], 1))))
             buf_name = result[0].replace("<root>", "Main")
             layer = blender_result.layers[0].passes[buf_name]
