@@ -33,7 +33,7 @@ class SceneConverter:
         self.render = render
 
     def set_path(self, name, split_files=False):
-        from mitsuba.python.xml import WriteXML
+        from .xml_writer import WriteXML
         # Ideally, this should only be created if we want to write a scene.
         # For now we need it to save meshes and packed textures.
         # TODO: get rid of all writing to disk when creating the dict
