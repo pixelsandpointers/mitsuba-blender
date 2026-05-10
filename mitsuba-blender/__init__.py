@@ -16,9 +16,10 @@ def get_addon_preferences(context):
 def _ensure_extensions_local_in_path():
     # Blender should add the extensions .local path automatically, but add it
     # explicitly as a fallback in case the addon loads before it's set up.
-    import sysconfig
+    # __file__ is .../extensions/user_default/mitsuba_blender/__init__.py
+    # so three dirname calls reach .../extensions/
     tag = f'python{sys.version_info.major}.{sys.version_info.minor}'
-    extensions_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    extensions_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     local_site = os.path.join(extensions_dir, '.local', 'lib', tag, 'site-packages')
     if os.path.isdir(local_site) and local_site not in sys.path:
         sys.path.insert(0, local_site)
