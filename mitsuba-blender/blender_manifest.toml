@@ -17,7 +17,7 @@ copyright = [
 ]
 category = "Render"
 tags = ["Render", "Import-Export"]
-website = "https://github.com/mitsuba-renderer/mitsuba-blender"
+website = "https://github.com/pixelsandpointers/mitsuba-blender"
 
 # Wheel paths are injected by release/package.py at build time.
 # To build locally: python release/package.py --platform <platform>

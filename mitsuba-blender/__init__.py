@@ -13,8 +13,19 @@ MITSUBA_VERSION = '3.8.0'
 def get_addon_preferences(context):
     return context.preferences.addons[__package__].preferences
 
+def _ensure_extensions_local_in_path():
+    # Blender should add the extensions .local path automatically, but add it
+    # explicitly as a fallback in case the addon loads before it's set up.
+    import sysconfig
+    tag = f'python{sys.version_info.major}.{sys.version_info.minor}'
+    extensions_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    local_site = os.path.join(extensions_dir, '.local', 'lib', tag, 'site-packages')
+    if os.path.isdir(local_site) and local_site not in sys.path:
+        sys.path.insert(0, local_site)
+
 def init_mitsuba(context):
     try:
+        _ensure_extensions_local_in_path()
         os.environ['DRJIT_NO_RTLD_DEEPBIND'] = 'True'
         should_reload = 'mitsuba' in sys.modules
         import mitsuba
@@ -25,7 +36,8 @@ def init_mitsuba(context):
         from mitsuba import ThreadEnvironment
         bpy.types.Scene.thread_env = ThreadEnvironment()
         return True
-    except ModuleNotFoundError:
+    except Exception as e:
+        print(f'mitsuba-blender: failed to load Mitsuba: {e}')
         return False
 
 def try_register_mitsuba(context):
