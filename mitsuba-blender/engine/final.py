@@ -26,26 +26,25 @@ class MitsubaRenderEngine(bpy.types.RenderEngine):
     # This is the method called by Blender for both final renders (F12) and
     # small preview for materials, world and lights.
     def render(self, depsgraph):
-        from mitsuba import set_variant
+        from mitsuba import set_variant, Thread
         b_scene = depsgraph.scene
         set_variant(b_scene.mitsuba.variant)
-        from mitsuba import ScopedSetThreadEnvironment, Thread
-        with ScopedSetThreadEnvironment(b_scene.thread_env):
-            scale = b_scene.render.resolution_percentage / 100.0
-            self.size_x = int(b_scene.render.resolution_x * scale)
-            self.size_y = int(b_scene.render.resolution_y * scale)
 
-            # Temporary workaround as long as the dict creation writes stuff to dict
-            with tempfile.TemporaryDirectory() as dummy_dir:
-                filepath = os.path.join(dummy_dir, "scene.xml")
-                self.converter.set_path(filepath)
-                self.converter.scene_to_dict(depsgraph)
-                Thread.thread().file_resolver().prepend(dummy_dir)
-                mts_scene = self.converter.dict_to_scene()
+        scale = b_scene.render.resolution_percentage / 100.0
+        self.size_x = int(b_scene.render.resolution_x * scale)
+        self.size_y = int(b_scene.render.resolution_y * scale)
 
-            sensor = mts_scene.sensors()[0]
-            mts_scene.integrator().render(mts_scene, sensor)
-            render_results = sensor.film().bitmap().split()
+        # Temporary workaround as long as the dict creation writes stuff to dict
+        with tempfile.TemporaryDirectory() as dummy_dir:
+            filepath = os.path.join(dummy_dir, "scene.xml")
+            self.converter.set_path(filepath)
+            self.converter.scene_to_dict(depsgraph)
+            Thread.thread().file_resolver().prepend(dummy_dir)
+            mts_scene = self.converter.dict_to_scene()
+
+        sensor = mts_scene.sensors()[0]
+        mts_scene.integrator().render(mts_scene, sensor)
+        render_results = sensor.film().bitmap().split()
 
             for result in render_results:
                 buf_name = result[0].replace("<root>", "Main")

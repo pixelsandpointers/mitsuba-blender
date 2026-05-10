@@ -34,8 +34,6 @@ def init_mitsuba(context):
             import importlib
             importlib.reload(mitsuba)
         mitsuba.set_variant('scalar_rgb')
-        from mitsuba import ThreadEnvironment
-        bpy.types.Scene.thread_env = ThreadEnvironment()
         return True
     except Exception as e:
         print(f'mitsuba-blender: failed to load Mitsuba: {e}')

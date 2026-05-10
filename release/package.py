@@ -40,14 +40,13 @@ def download_wheel(platform, wheels_dir):
                     '--python-version', pyver,
                     '--platform', tag,
                     '--only-binary=:all:',
-                    '--no-deps',
                 ],
                 capture_output=True,
             )
             if result.returncode == 0:
                 wheels = [
                     f for f in os.listdir(wheels_dir)
-                    if f.startswith('mitsuba') and f.endswith('.whl') and tag in f
+                    if f.endswith('.whl') and tag in f
                 ]
                 if wheels:
                     print(f'Downloaded: {wheels}')
